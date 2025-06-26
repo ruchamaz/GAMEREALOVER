@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>משחק טריוויה לילדים</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 500px;
+            min-height: 600px;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 2.5em;
+            color: #4a5568;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .question-container {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 2px solid #e2e8f0;
+        }
+
+        .question-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .question-type {
+            background: #e2e8f0;
+            color: #4a5568;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+
+        .answer-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .answer-btn {
+            background: white;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+            padding: 15px;
+            font-size: 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .answer-btn:hover {
+            background: #f8fafc;
+            border-color: #cbd5e0;
+        }
+
+        .answer-btn.correct {
+            background: #48bb78;
+            color: white;
+            border-color: #48bb78;
+        }
+
+        .answer-btn.incorrect {
+            background: #f56565;
+            color: white;
+            border-color: #f56565;
+        }
+
+        .tf-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .tf-btn {
+            flex: 1;
+            max-width: 120px;
+            padding: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #48bb78, #38a169);
+            transition: width 0.3s ease;
+        }
+
+        .score-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2d3748;
+            margin: 20px 0;
+        }
+
+        .leaderboard {
+            text-align: right;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .leaderboard-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .leaderboard-item.current-player {
+            background: #e6fffa;
+            border-color: #4fd1c7;
+        }
+
+        .rank {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .player-name {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .player-score {
+            font-weight: bold;
+            color: #48bb78;
+        }
+
+        .category-stats {
+            background: #f8fafc;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: right;
+        }
+
+        .category-stats h3 {
+            color: #4a5568;
+            margin-bottom: 10px;
+        }
+
+        .category-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 20px;
+                margin: 5px;
+            }
+            
+            .logo {
+                font-size: 2em;
+            }
+            
+            .question-text {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="logo">🎯 טריוויה לילדים</div>
+        
+        <!-- מסך התחלה -->
+        <div id="start-screen" class="screen active">
+            <h2>ברוכים הבאים למשחק הטריוויה!</h2>
+            <p>בחן את הידע שלך בהיסטוריה, גאוגרפיה, ספורט ועוד...</p>
+            <input type="text" id="player-name" placeholder="הכנס את השם שלך" maxlength="20">
+            <br>
+            <button onclick="startGame()">התחל משחק</button>
+            <button onclick="showLeaderboard()">טבלת מובילים</button>
+        </div>
+
+        <!-- מסך המשחק -->
+        <div id="game-screen" class="screen">
+            <div class="progress-bar">
+                <div id="progress-fill" class="progress-fill"></div>
+            </div>
+            <div class="score-display">ניקוד: <span id="current-score">0</span>/10</div>
+            <div class="question-container">
+                <div id="question-type" class="question-type"></div>
+                <div id="question-text" class="question-text"></div>
+                <div id="answer-container"></div>
+            </div>
+            <button id="next-btn" onclick="nextQuestion()" style="display: none;">השאלה הבאה</button>
+        </div>
+
+        <!-- מסך תוצאות -->
+        <div id="results-screen" class="screen">
+            <h2>סיימת את המשחק! 🎉</h2>
+            <div class="score-display">הניקוד הסופי: <span id="final-score">0</span>/10</div>
+            <div id="performance-message"></div>
+            <div class="category-stats">
+                <h3>ביצועים לפי נושא:</h3>
+                <div id="category-breakdown"></div>
+            </div>
+            <button onclick="playAgain()">שחק שוב</button>
+            <button onclick="showLeaderboard()">טבלת מובילים</button>
+            <button onclick="backToStart()">חזור לתחילה</button>
+        </div>
+
+        <!-- טבלת מובילים -->
+        <div id="leaderboard-screen" class="screen">
+            <h2>🏆 טבלת מובילים</h2>
+            <div id="leaderboard-list" class="leaderboard"></div>
+            <button onclick="backToStart()">חזור לתחילה</button>
+            <button onclick="clearLeaderboard()">נקה טבלה</button>
+        </div>
+    </div>
+
+    <script>
+        // בסיס נתונים של שאלות
+        const questions = {
+            trueFalse: [
+                // היסטוריה
+                {text: "פירמידות מצרים נבנו לפני 4000 שנה", answer: true, category: "היסטוריה"},
+                {text: "נפוליאון היה קיסר צרפת", answer: true, category: "היסטוריה"},
+                {text: "מלחמת העולם השנייה החלה ב-1941", answer: false, category: "היסטוריה"},
+                {text: "קולומבוס הגיע לאמריקה ב-1492", answer: true, category: "היסטוריה"},
+                {text: "מלחמת העולם הראשונה נקראה גם 'המלחמה הגדולה'", answer: true, category: "היסטוריה"},
+                {text: "ייליוס קיסר היה קיסר רומי", answer: false, category: "היסטוריה"},
+                {text: "חומת סין הגדולה נבנתה במאה ה-20", answer: false, category: "היסטוריה"},
+                {text: "מצרים העתיקה הייתה מתחת לשלטון פרעונים", answer: true, category: "היסטוריה"},
+                {text: "אלכסנדר הגדול כבש את פרס", answer: true, category: "היסטוריה"},
+                {text: "התיטאניק טבע ב-1912", answer: true, category: "היסטוריה"},
+                
+                // גאוגרפיה
+                {text: "אוסטרליה היא היבשת הקטנה ביותר", answer: true, category: "גאוגרפיה"},
+                {text: "הר האוורסט הוא ההר הגבוה ביותר בעולם", answer: true, category: "גאוגרפיה"},
+                {text: "הנילוס הוא הנהר הארוך ביותר בעולם", answer: true, category: "גאוגרפיה"},
+                {text: "ברזיל גדולה מאמריקה", answer: false, category: "גאוגרפיה"},
+                {text: "בקוטב הצפוני יש פינגווינים", answer: false, category: "גאוגרפיה"},
+                {text: "יפן מורכבת מ-4 איים גדולים", answer: true, category: "גאוגרפיה"},
+                {text: "מדבר סהרה הוא המדבר הגדול ביותר בעולם", answer: true, category: "גאוגרפיה"},
+                {text: "ים המלח הוא הנקודה הנמוכה ביותר על פני כדור הארץ", answer: true, category: "גאוגרפיה"},
+                {text: "רוסיה היא המדינה הגדולה ביותר בעולם", answer: true, category: "גאוגרפיה"},
+                {text: "גרינלנד שייכת לדנמרק", answer: true, category: "גאוגרפיה"},
+                
+                // ספורט
+                {text: "במונדיאל משתתפות 32 נבחרות", answer: true, category: "ספורט"},
+                {text: "האולימפיאדה מתקיימת כל 4 שנים", answer: true, category: "ספורט"},
+                {text: "משחק כדורגל נמשך 90 דקות", answer: true, category: "ספורט"},
+                {text: "בכדורסל המטרה גבוהה 3 מטר", answer: false, category: "ספורט"},
+                {text: "טניס שולחן נקרא גם פינג-פונג", answer: true, category: "ספורט"},
+                {text: "בפורמולה 1 יש 10 קבוצות", answer: true, category: "ספורט"},
+                {text: "בהוקי קרח משחקים עם כדור", answer: false, category: "ספורט"},
+                {text: "מרתון הוא ריצה של 42 קילומטר", answer: true, category: "ספורט"},
+                {text: "בגולף המטרה היא להכניס את הכדור לגומה", answer: true, category: "ספורט"},
+                {text: "קפיצה לגובה היא ענף באתלטיקה", answer: true, category: "ספורט"},
+                
+                // גוף האדם
+                {text: "בגוף האדם יש 206 עצמות", answer: true, category: "גוף האדם"},
+                {text: "הלב יש לו 4 חדרים", answer: true, category: "גוף האדם"},
+                {text: "לאדם יש 5 חושים", answer: true, category: "גוף האדם"},
+                {text: "השן הכי גדולה נקראת טוחנת", answer: true, category: "גוף האדם"},
+                {text: "הכבד הוא האיבר הגדול ביותר בגוף", answer: true, category: "גוף האדם"},
+                {text: "הריאות משמשות לנשימה", answer: true, category: "גוף האדם"},
+                {text: "יש לנו 10 אצבעות", answer: true, category: "גוף האדם"},
+                {text: "העור הוא האיבר הגדול ביותר בגוף", answer: true, category: "גוף האדם"},
+                {text: "המוח שוקל כ-2 קילוגרם", answer: false, category: "גוף האדם"},
+                {text: "יש לנו 32 שיניים", answer: true, category: "גוף האדם"},
+                
+                // גאופוליטיקה
+                {text: "באו\"ם יש 193 מדינות חברות", answer: true, category: "גאופוליטיקה"},
+                {text: "וושינגטון היא בירת אמריקא", answer: true, category: "גאופוליטיקה"},
+                {text: "ברזיל דוברת ספרדית", answer: false, category: "גאופוליטיקה"},
+                {text: "קנדה גדולה מאמריקה", answer: false, category: "גאופוליטיקה"},
+                {text: "בצרפת הכסף נקרא יורו", answer: true, category: "גאופוליטיקה"},
+                {text: "בסין גרים יותר ממיליארד איש", answer: true, category: "גאופוליטיקה"},
+                {text: "מצרים נמצאת באפריקה", answer: true, category: "גאופוליטיקה"},
+                {text: "אוסטרליה נמצאת באוקיינוס השקט", answer: true, category: "גאופוליטיקה"},
+                {text: "ההודו היא המדינה המאוכלסת ביותר בעולם", answer: true, category: "גאופוליטיקה"},
+                {text: "סין וההודו הן מדינות שכנות", answer: true, category: "גאופוליטיקה"}
+            ],
+            
+            multipleChoice: [
+                // היסטוריה
+                {text: "מי בנה את פירמידות גיזה?", options: ["המצרים", "הרומאים", "היוונים", "הבבלים"], answer: 0, category: "היסטוריה"},
+                {text: "באיזו שנה התחילה מלחמת העולם השנייה?", options: ["1938", "1939", "1940", "1941"], answer: 1, category: "היסטוריה"},
+                {text: "מי היה הקיסר הראשון של רומא?", options: ["ייליוס קיסר", "אוגוסטוס", "נרון", "טיטוס"], answer: 1, category: "היסטוריה"},
+                {text: "איזה מדינה גילתה את אמריקה?", options: ["אנגליה", "פורטוגל", "ספרד", "הולנד"], answer: 2, category: "היסטוריה"},
+                {text: "מתי הרסו את בית המקדש השני?", options: ["70 לספירה", "68 לספירה", "72 לספירה", "65 לספירה"], answer: 0, category: "היסטוריה"},
+                {text: "מי מצא את קבר תותנח'אמון?", options: ["הווארד קרטר", "ארתור אוונס", "היינריך שלימן", "מקס מלואן"], answer: 0, category: "היסטוריה"},
+                {text: "באיזו מדינה נבנה טאג' מהאל?", options: ["הודו", "איראן", "טורקיה", "אפגניסטן"], answer: 0, category: "היסטוריה"},
+                {text: "מה היה השם של הספינה של קולומבוס?", options: ["סנטה מריה", "פינטה", "נינה", "ויקטוריה"], answer: 0, category: "היסטוריה"},
+                {text: "איזה קיסר רומי הפך את הנצרות לדת רשמית?", options: ["נרון", "טרייאן", "קונסטנטין", "דיוקלטיאן"], answer: 2, category: "היסטוריה"},
+                {text: "מתי נפלה האימפריה הרומית?", options: ["410", "476", "453", "488"], answer: 1, category: "היסטוריה"},
+                
+                // גאוגרפיה
+                {text: "מה היא בירת אוסטרליה?", options: ["סידני", "מלבורן", "קנברה", "ברסביין"], answer: 2, category: "גאוגרפיה"},
+                {text: "איזה הר הוא הגבוה ביותר באפריקה?", options: ["הר קילימנג'רו", "הר קניה", "הר מרו", "הר אלגון"], answer: 0, category: "גאוגרפיה"},
+                {text: "איזה ים מפריד בין אירופה לאפריקה?", options: ["הים השחור", "הים האדום", "הים התיכון", "הים הכספי"], answer: 2, category: "גאוגרפיה"},
+                {text: "איזו מדינה הכי קרובה לאנטרקטיקה?", options: ["ארגנטינה", "צ'ילה", "אוסטרליה", "דרום אפריקה"], answer: 1, category: "גאוגרפיה"},
+                {text: "איזה נהר הכי ארוך באירופה?", options: ["הדנובה", "הוולגה", "הריין", "הדניפר"], answer: 1, category: "גאוגרפיה"},
+                {text: "כמה יבשות יש בעולם?", options: ["5", "6", "7", "8"], answer: 2, category: "גאוגרפיה"},
+                {text: "איזה מדבר הוא הכי גדול בעולם?", options: ["סהרה", "גובי", "קלהארי", "אטקמה"], answer: 0, category: "גאוגרפיה"},
+                {text: "איזו מדינה יש לה הכי הרבה איים?", options: ["יוון", "פינלנד", "נורווגיה", "יפן"], answer: 1, category: "גאוגרפיה"},
+                {text: "איזה אוקיינוס הוא הכי גדול?", options: ["האטלנטי", "ההודי", "הארקטי", "השקט"], answer: 3, category: "גאוגרפיה"},
+                {text: "איזו מדינה נמצאת בשני יבשות?", options: ["רוסיה", "טורקיה", "מצרים", "כל התשובות נכונות"], answer: 3, category: "גאוגרפיה"},
+                
+                // ספורט
+                {text: "כמה שחקנים יש בקבוצת כדורגל?", options: ["10", "11", "12", "13"], answer: 1, category: "ספורט"},
+                {text: "איזו מדינה זכתה הכי הרבה פעמים במונדיאל?", options: ["גרמניה", "ארגנטינה", "ברזיל", "איטליה"], answer: 2, category: "ספורט"},
+                {text: "כמה קבוצות יש ב-NBA?", options: ["28", "30", "32", "34"], answer: 1, category: "ספורט"},
+                {text: "איזה ספורט מכונה 'המשחק הישן'?", options: ["כדורגל", "כדורסל", "בייסבול", "הוקי"], answer: 2, category: "ספורט"},
+                {text: "כמה סטים צריך לזכות בטניס?", options: ["2", "3", "4", "5"], answer: 1, category: "ספורט"},
+                {text: "איזה ספורט נקרא 'המשחק הרויאלי'?", options: ["טניס", "גולף", "פולו", "קריקט"], answer: 0, category: "ספורט"},
+                {text: "כמה דקות יש בתור בכדורסל NBA?", options: ["10", "12", "15", "20"], answer: 1, category: "ספורט"},
+                {text: "איזה ספורט משתמש בכדור הכי גדול?", options: ["כדורגל", "כדורסל", "כדורעף", "הוקי"], answer: 2, category: "ספורט"},
+                {text: "כמה שחקנים יש בקבוצת רגבי?", options: ["13", "15", "17", "19"], answer: 1, category: "ספורט"},
+                {text: "איזה ספורט נקרא גם 'שחמט'?", options: ["בוקס", "קרטה", "ג'ודו", "טקוונדו"], answer: 0, category: "ספורט"},
+                
+                // גוף האדם
+                {text: "איזה איבר מסנן את הדם?", options: ["הלב", "הכבד", "הכליות", "הטחול"], answer: 2, category: "גוף האדם"},
+                {text: "כמה עצמות יש בגוף האדם?", options: ["204", "206", "208", "210"], answer: 1, category: "גוף האדם"},
+                {text: "איזה איבר מייצר אינסולין?", options: ["הכבד", "הלבלב", "הכליות", "הטחול"], answer: 1, category: "גוף האדם"},
+                {text: "איזה חוש קשור לאוזן?", options: ["ראייה", "שמיעה", "חוש שיווי משקל", "ב' ו-ג'"], answer: 3, category: "גוף האדם"},
+                {text: "כמה שיניים יש לילד?", options: ["20", "22", "24", "26"], answer: 0, category: "גוף האדם"},
+                {text: "איזה איבר הכי גדול בגוף?", options: ["הכבד", "הריאות", "העור", "המוח"], answer: 2, category: "גוף האדם"},
+                {text: "כמה לב יש לאדם?", options: ["1", "2", "3", "4"], answer: 0, category: "גוף האדם"},
+                {text: "איזה איבר אחראי על הזיכרון?", options: ["הלב", "המוח", "הכבד", "הריאות"], answer: 1, category: "גוף האדם"},
+                {text: "כמה ריאות יש לאדם?", options: ["1", "2", "3", "4"], answer: 1, category: "גוף האדם"},
+                {text: "איזה איבר מייצר מרה?", options: ["הכבד", "הלבלב", "הכליות", "הקיבה"], answer: 0, category: "גוף האדם"},
+                
+                // גאופוליטיקה
+                {text: "כמה מדינות יש באיחוד האירופי?", options: ["25", "27", "29", "31"], answer: 1, category: "גאופוליטיקה"},
+                {text: "איזו מדינה הכי מאוכלסת בעולם?", options: ["סין", "הודו", "אמריקה", "ברזיל"], answer: 1, category: "גאופוליטיקה"},
+                {text: "מה זה נאט״ו?", options: ["ארגון כלכלי", "ברית צבאית", "ארגון תרבות", "ארגון סביבה"], answer: 1, category: "גאופוליטיקה"},
+                {text: "איזה מדינה הכי עשירה בעולם?", options: ["אמריקה", "סין", "גרמניה", "יפן"], answer: 0, category: "גאופוליטיקה"},
+                {text: "מה הכסף של בריטניה?", options: ["יורו", "דולר", "לירה", "פרנק"], answer: 2, category: "גאופוליטיקה"},
+                {text: "איזה ארגון מטפל בבריאות עולמית?", options: ["WHO", "UNESCO", "UNICEF", "WTO"], answer: 0, category: "גאופוליטיקה"},
+                {text: "כמה מדינות חברות באו״ם?", options: ["191", "193", "195", "197"], answer: 1, category: "גאופוליטיקה"},
+                {text: "איזו מדינה הכי גדולה בעולם?", options: ["קנדה", "סין", "רוסיה", "אמריקה"], answer: 2, category: "גאופוליטיקה"},
+                {text: "איזו מדינה יוצאת הכי הרבה נפט?", options: ["ערב הסעודית", "רוסיה", "אמריקה", "איראן"], answer: 0, category: "גאופוליטיקה"},
+                {text: "איזו יבשת הכי עניה?", options: ["אסיה", "אפריקה", "דרום אמריקה", "אוקיינוס"], answer: 1, category: "גאופוליטיקה"}
+            ]
+        };
+
+        // משתנים גלובליים
+        let currentPlayer = '';
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let answered = false;
+        let categoryStats = {};
+
+        // טעינת נתונים מ-localStorage
+        function loadLeaderboard() {
+            const saved = localStorage.getItem('triviaLeaderboard');
+            return saved ? JSON.parse(saved) : [];
+        }
+
+        function saveLeaderboard(leaderboard) {
+            localStorage.setItem('triviaLeaderboard', JSON.stringify(leaderboard));
+        }
+
+        // התחלת המשחק
+        function startGame() {
+            const name = document.getElementById('player-name').value.trim();
+            if (!name) {
+                alert('אנא הכנס שם');
+                return;
+            }
+            
+            currentPlayer = name;
+            score = 0;
+            currentQuestionIndex = 0;
+            answered = false;
+            categoryStats = {
+                'היסטוריה': {correct: 0, total: 0},
+                'גאוגרפיה': {correct: 0, total: 0},
+                'ספורט': {correct: 0, total: 0},
+                'גוף האדם': {correct: 0, total: 0},
+                'גאופוליטיקה': {correct: 0, total: 0}
+            };
+            
+            // יצירת 10 שאלות רנדומליות
+            generateRandomQuestions();
+            
+            showScreen('game-screen');
+            displayQuestion();
+        }
+
+        function generateRandomQuestions() {
+            currentQuestions = [];
+            
+            // 5 שאלות נכון/לא נכון
+            const tfQuestions = [...questions.trueFalse];
+            for (let i = 0; i < 5; i++) {
+                const randomIndex = Math.floor(Math.random() * tfQuestions.length);
+                currentQuestions.push({...tfQuestions[randomIndex], type: 'trueFalse'});
+                tfQuestions.splice(randomIndex, 1);
+            }
+            
+            // 5 שאלות אמריקאיות
+            const mcQuestions = [...questions.multipleChoice];
+            for (let i = 0; i < 5; i++) {
+                const randomIndex = Math.floor(Math.random() * mcQuestions.length);
+                currentQuestions.push({...mcQuestions[randomIndex], type: 'multipleChoice'});
+                mcQuestions.splice(randomIndex, 1);
+            }
+            
+            // ערבוב השאלות
+            for (let i = currentQuestions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [currentQuestions[i], currentQuestions[j]] = [currentQuestions[j], currentQuestions[i]];
+            }
+        }
+
+        function displayQuestion() {
+            const question = currentQuestions[currentQuestionIndex];
+            const progress = ((currentQuestionIndex + 1) / 10) * 100;
+            
+            document.getElementById('progress-fill').style.width = progress + '%';
+            document.getElementById('current-score').textContent = score;
+            document.getElementById('question-type').textContent = question.category;
+            document.getElementById('question-text').textContent = question.text;
+            
+            const container = document.getElementById('answer-container');
+            container.innerHTML = '';
+            answered = false;
+            
+            if (question.type === 'trueFalse') {
+                container.innerHTML = `
+                    <div class="tf-buttons">
+                        <button class="tf-btn" onclick="answerTrueFalse(true)">נכון ✓</button>
+                        <button class="tf-btn" onclick="answerTrueFalse(false)">לא נכון ✗</button>
+                    </div>
+                `;
+            } else {
+                container.className = 'answer-buttons';
+                question.options.forEach((option, index) => {
+                    const button = document.createElement('button');
+                    button.className = 'answer-btn';
+                    button.textContent = option;
+                    button.onclick = () => answerMultipleChoice(index);
+                    container.appendChild(button);
+                });
+            }
+            
+            document.getElementById('next-btn').style.display = 'none';
+        }
+
+        function answerTrueFalse(userAnswer) {
+            if (answered) return;
+            answered = true;
+            
+            const question = currentQuestions[currentQuestionIndex];
+            const isCorrect = userAnswer === question.answer;
+            
+            // עדכון סטטיסטיקות
+            categoryStats[question.category].total++;
+            if (isCorrect) {
+                categoryStats[question.category].correct++;
+                score++;
+            }
+            
+            // צביעת הכפתורים
+            const buttons = document.querySelectorAll('.tf-btn');
+            buttons.forEach(btn => {
+                if ((btn.textContent.includes('נכון') && question.answer) || 
+                    (btn.textContent.includes('לא נכון') && !question.answer)) {
+                    btn.classList.add('correct');
+                } else if ((btn.textContent.includes('נכון') && userAnswer && !question.answer) || 
+                          (btn.textContent.includes('לא נכון') && !userAnswer && question.answer)) {
+                    btn.classList.add('incorrect');
+                }
+                btn.disabled = true;
+            });
+            
+            document.getElementById('current-score').textContent = score;
+            document.getElementById('next-btn').style.display = 'block';
+        }
+
+        function answerMultipleChoice(userAnswer) {
+            if (answered) return;
+            answered = true;
+            
+            const question = currentQuestions[currentQuestionIndex];
+            const isCorrect = userAnswer === question.answer;
+            
+            // עדכון סטטיסטיקות
+            categoryStats[question.category].total++;
+            if (isCorrect) {
+                categoryStats[question.category].correct++;
+                score++;
+            }
+            
+            // צביעת הכפתורים
+            const buttons = document.querySelectorAll('.answer-btn');
+            buttons.forEach((btn, index) => {
+                if (index === question.answer) {
+                    btn.classList.add('correct');
+                } else if (index === userAnswer && !isCorrect) {
+                    btn.classList.add('incorrect');
+                }
+                btn.disabled = true;
+            });
+            
+            document.getElementById('current-score').textContent = score;
+            document.getElementById('next-btn').style.display = 'block';
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex >= 10) {
+                endGame();
+            } else {
+                displayQuestion();
+            }
+        }
+
+        function endGame() {
+            // שמירת התוצאה
+            const leaderboard = loadLeaderboard();
+            leaderboard.push({
+                name: currentPlayer,
+                score: score,
+                date: new Date().toLocaleDateString('he-IL'),
+                categories: {...categoryStats}
+            });
+            
+            // מיון לפי ציון
+            leaderboard.sort((a, b) => b.score - a.score);
+            saveLeaderboard(leaderboard);
+            
+            // הצגת תוצאות
+            document.getElementById('final-score').textContent = score;
+            
+            let message = '';
+            if (score >= 9) message = 'מעולה! אתה מלומד אמיתי! 🌟';
+            else if (score >= 7) message = 'כל הכבוד! ביצועים טובים מאוד! 👍';
+            else if (score >= 5) message = 'לא רע! יש מקום לשיפור 😊';
+            else message = 'כדאי לחזור על החומר 📚';
+            
+            document.getElementById('performance-message').innerHTML = `<p style="font-size: 18px; color: #4a5568; margin: 15px 0;">${message}</p>`;
+            
+            // הצגת פילוח לפי נושאים
+            const breakdown = document.getElementById('category-breakdown');
+            breakdown.innerHTML = '';
+            
+            Object.keys(categoryStats).forEach(category => {
+                const stats = categoryStats[category];
+                if (stats.total > 0) {
+                    const div = document.createElement('div');
+                    div.className = 'category-item';
+                    div.innerHTML = `
+                        <span>${category}:</span>
+                        <span>${stats.correct}/${stats.total}</span>
+                    `;
+                    breakdown.appendChild(div);
+                }
+            });
+            
+            showScreen('results-screen');
+        }
+
+        function showLeaderboard() {
+            const leaderboard = loadLeaderboard();
+            const list = document.getElementById('leaderboard-list');
+            list.innerHTML = '';
+            
+            if (leaderboard.length === 0) {
+                list.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">אין עדיין תוצאות</p>';
+            } else {
+                leaderboard.slice(0, 10).forEach((player, index) => {
+                    const div = document.createElement('div');
+                    div.className = `leaderboard-item ${player.name === currentPlayer ? 'current-player' : ''}`;
+                    
+                    div.innerHTML = `
+                        <span class="rank">#${index + 1}</span>
+                        <span class="player-name">${player.name}</span>
+                        <span class="player-score">${player.score}/10</span>
+                    `;
+                    list.appendChild(div);
+                });
+            }
+            
+            showScreen('leaderboard-screen');
+        }
+
+        function clearLeaderboard() {
+            if (confirm('האם אתה בטוח שאתה רוצה למחוק את כל התוצאות?')) {
+                localStorage.removeItem('triviaLeaderboard');
+                showLeaderboard();
+            }
+        }
+
+        function playAgain() {
+            document.getElementById('player-name').value = currentPlayer;
+            startGame();
+        }
+
+        function backToStart() {
+            showScreen('start-screen');
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // הוספת מאזין לאנטר בשדה השם
+        document.getElementById('player-name').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                startGame();
+            }
+        });
+    </script>
+</body>
+</html>
